@@ -91,7 +91,10 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         if movie_id:
             queryset = queryset.filter(movie_id=movie_id)
 
-        return queryset
+        if self.action in ("list", "retrieve"):
+            queryset = queryset.select_related("movie", "cinema_hall")
+
+        return queryset.distinct()
 
 
 class OrderViewSet(viewsets.ModelViewSet):
