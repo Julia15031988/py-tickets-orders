@@ -1,4 +1,6 @@
 from rest_framework import viewsets, filters, permissions
+from django.utils import timezone
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from cinema.models import Genre, Actor, CinemaHall,\
@@ -49,8 +51,8 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Movie.objects.all()
-        genres = self.request.query_params.getlist("genres")
-        actors = self.request.query_params.getlist("actors")
+        genres = self.request.query_params.get("genres", "").split(",")
+        actors = self.request.query_params.get("actors", "").split(",")
         title = self.request.query_params.get("title")
 
         if genres:
@@ -101,10 +103,17 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return queryset.distinct()
 
 
+class OrderPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     queryset = Order.objects.all()
+    pagination_class = OrderPagination
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).prefetch_related(
