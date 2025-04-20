@@ -1,6 +1,5 @@
 from rest_framework import viewsets, filters, permissions
-from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from cinema.models import Genre, Actor, CinemaHall,\
     Movie, MovieSession, Order
@@ -87,7 +86,7 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
                 date_obj = datetime.strptime(date, "%Y-%m-%d").date()
                 queryset = queryset.filter(show_time__date=date_obj)
             except ValueError:
-                pass  # або raise validation error
+                raise ValidationError("Wrong format? use please: YYYY-MM-DD.")
 
         if movie_id:
             queryset = queryset.filter(movie_id=movie_id)

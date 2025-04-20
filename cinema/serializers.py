@@ -1,5 +1,5 @@
 from rest_framework import serializers
-
+from django.db import transaction
 from cinema.models import Genre, Actor, CinemaHall,\
     Movie, MovieSession, Order, Ticket
 
@@ -131,7 +131,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
-    tickets = TicketCreateSerializer(many=True)
+    tickets = TicketCreateSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
@@ -141,9 +141,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tickets_data = validated_data.pop("tickets")
         user = self.context["request"].user
-        order = Order.objects.create(user=user, **validated_data)
 
-        for ticket_data in tickets_data:
-            Ticket.objects.create(order=order, **ticket_data)
+        with transaction.atomic():
+            order = Order.objects.create(user=user, **validated_data)
+
+            for ticket_data in tickets_data:
+                Ticket.objects.create(order=order, **ticket_data)
 
         return order
