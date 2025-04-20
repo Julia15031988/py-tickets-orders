@@ -1,5 +1,4 @@
 from rest_framework import viewsets, filters, permissions
-from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
