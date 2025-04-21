@@ -47,13 +47,16 @@ class MovieDetailSerializer(MovieSerializer):
 
 
 class MovieSessionSerializer(serializers.ModelSerializer):
-    movie_title = serializers.CharField(source='movie.title', read_only=True)
-    cinema_hall_name = serializers.CharField(source='cinema_hall.name', read_only=True)
-    cinema_hall_capacity = serializers.IntegerField(source='cinema_hall.capacity', read_only=True)
+    movie_title = serializers.CharField(source="movie.title", read_only=True)
+    cinema_hall_name = serializers.CharField(
+        source="cinema_hall.name", read_only=True)
+    cinema_hall_capacity = serializers.IntegerField(
+        source="cinema_hall.capacity", read_only=True)
 
     class Meta:
         model = MovieSession
-        fields = ("id", "show_time", "movie", "cinema_hall", "movie_title", "cinema_hall_name", "cinema_hall_capacity")
+        fields = ("id", "show_time", "movie", "cinema_hall",
+                  "movie_title", "cinema_hall_name", "cinema_hall_capacity")
 
 
 class MovieSessionListSerializer(MovieSessionSerializer):
@@ -99,8 +102,8 @@ class TicketSerializer(serializers.ModelSerializer):
     movie_title = serializers.SerializerMethodField()
 
     def get_movie_title(self, obj):
-        return obj.movie_session.movie.title if obj.movie_session and obj.movie_session.movie else None
-
+        return obj.movie_session.movie.title \
+            if obj.movie_session and obj.movie_session.movie else None
 
     class Meta:
         model = Ticket
@@ -128,7 +131,7 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         if not (1 <= seat <= hall.seats_in_row):
             raise serializers.ValidationError("Invalid seat number.")
 
-        return data
+        return attrs
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -140,7 +143,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
-    tickets = TicketCreateSerializer(many=True, write_only=True, allow_empty=False)
+    tickets = TicketCreateSerializer(many=True,
+                                     write_only=True, allow_empty=False)
 
     class Meta:
         model = Order
