@@ -47,9 +47,13 @@ class MovieDetailSerializer(MovieSerializer):
 
 
 class MovieSessionSerializer(serializers.ModelSerializer):
+    movie_title = serializers.CharField(source='movie.title', read_only=True)
+    cinema_hall_name = serializers.CharField(source='cinema_hall.name', read_only=True)
+    cinema_hall_capacity = serializers.IntegerField(source='cinema_hall.capacity', read_only=True)
+
     class Meta:
         model = MovieSession
-        fields = ("id", "show_time", "movie", "cinema_hall")
+        fields = ("id", "show_time", "movie", "cinema_hall", "movie_title", "cinema_hall_name", "cinema_hall_capacity")
 
 
 class MovieSessionListSerializer(MovieSessionSerializer):
@@ -92,10 +96,15 @@ class MovieSessionDetailSerializer(MovieSessionSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     movie_session = MovieSessionSerializer(read_only=True)
+    movie_title = serializers.SerializerMethodField()
+
+    def get_movie_title(self, obj):
+        return obj.movie_session.movie.title if obj.movie_session and obj.movie_session.movie else None
+
 
     class Meta:
         model = Ticket
-        fields = ("id", "row", "seat", "movie_session")
+        fields = ("id", "row", "seat", "movie_session", "movie_title")
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
@@ -103,10 +112,10 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = ("row", "seat", "movie_session")
 
-    def validate(self, data):
-        movie_session = data["movie_session"]
-        row = data["row"]
-        seat = data["seat"]
+    def validate(self, attrs):
+        movie_session = attrs["movie_session"]
+        row = attrs["row"]
+        seat = attrs["seat"]
 
         if Ticket.objects.filter(
             movie_session=movie_session, row=row, seat=seat
@@ -131,7 +140,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
-    tickets = TicketCreateSerializer(many=True, write_only=True)
+    tickets = TicketCreateSerializer(many=True, write_only=True, allow_empty=False)
 
     class Meta:
         model = Order
